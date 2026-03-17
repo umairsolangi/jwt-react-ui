@@ -7,6 +7,15 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+.error{
+color:red;
+margin-bottom:10px;
+}
+
+.success{
+color:green;
+margin-bottom:10px;
+}
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',

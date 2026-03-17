@@ -1,62 +1,81 @@
 import { useState } from "react";
 import API from "../services/api";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 
-function Login(){
+function Login() {
+  const navigate = useNavigate();
+  const location = useLocation();
 
- const navigate = useNavigate();
+  // Grab the success message passed from Register or ResetPassword
+  const message = location.state?.message;
 
- const [form,setForm]=useState({
-  email:"",
-  password:""
- });
+  const [form, setForm] = useState({
+    email: "",
+    password: ""
+  });
 
- const handleSubmit = async(e)=>{
-  e.preventDefault();
+  const [error, setError] = useState("");
 
-  const res = await API.post("/login",form);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
 
-  localStorage.setItem("token",res.data.token);
+    try {
+      const res = await API.post("/login", form);
 
-  navigate("/profile");
- };
+      localStorage.setItem("token", res.data.token);
+      navigate("/profile");
 
- return(
+    } catch (err) {
+      // Check for our custom 403 error (needs password reset)
+      if (err.response && err.response.status === 403) {
+        setError(err.response.data.error);
+      } 
+      // Check for standard 401 invalid credentials
+      else if (err.response && err.response.status === 401) {
+        setError("Invalid email or password");
+      } 
+      // Fallback error
+      else {
+        setError("Something went wrong. Please try again.");
+      }
+    }
+  };
 
-  <div className="container">
+  return (
+    <div className="container">
+      <div className="card">
+        <h2 className="title">Login</h2>
+        
+        {message && <p className="success">{message}</p>}
+        {error && <p className="error">{error}</p>}
 
-    <div className="card">
+        <form onSubmit={handleSubmit}>
+          <input
+            type="email"
+            className="input"
+            placeholder="Email"
+            required
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+          />
 
-      <h2 className="title">Login</h2>
+          <input
+            type="password"
+            className="input"
+            placeholder="Password"
+            required
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+          />
 
-      <form onSubmit={handleSubmit}>
+          <button className="btn">Login</button>
+        </form>
 
-        <input
-        className="input"
-        placeholder="Email"
-        onChange={(e)=>setForm({...form,email:e.target.value})}
-        />
-
-        <input
-        type="password"
-        className="input"
-        placeholder="Password"
-        onChange={(e)=>setForm({...form,password:e.target.value})}
-        />
-
-        <button className="btn">Login</button>
-
-      </form>
-
-      <div className="link">
-        <p>Don't have account? <Link to='/register'>Register</Link> </p>
+        <div className="link">
+          <p>Don't have an account? <Link to='/register'>Register</Link></p>
+        </div>
       </div>
-
     </div>
-
-  </div>
-
- );
+  );
 }
 
 export default Login;

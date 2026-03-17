@@ -1,45 +1,50 @@
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 import API from "../services/api";
+import { useNavigate } from "react-router-dom";
 
-function Profile(){
+function Profile() {
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
- const [user,setUser]=useState(null);
+  useEffect(() => {
+    const token = localStorage.getItem("token");
 
- useEffect(()=>{
+    if (!token) {
+      navigate("/login"); 
+      return;
+    }
 
-  const token = localStorage.getItem("token");
+    API.get("/profile", {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    .then(res => {
+      setUser(res.data);
+    })
+    .catch(err => {
+      localStorage.removeItem("token");
+      navigate("/login");
+    });
 
-  API.get("/profile",{
-   headers:{
-    Authorization:`Bearer ${token}`
-   }
-  })
-  .then(res=>{
-   setUser(res.data);
-  });
+  }, [navigate]);
 
- },[]);
+  return (
+    <div className="container">
+      <div className="profile-box">
+        <h2 className="title">Profile</h2>
 
- return(
-
-  <div className="container">
-
-    <div className="profile-box">
-
-      <h2 className="title">Profile</h2>
-
-      {user && (
-        <>
-        <p><b>Name:</b> {user.name}</p>
-        <p><b>Email:</b> {user.email}</p>
-        </>
-      )}
-
+        {user ? (
+          <>
+            <p><b>Name:</b> {user.name}</p>
+            <p><b>Email:</b> {user.email}</p>
+          </>
+        ) : (
+          <p>Loading profile...</p>
+        )}
+      </div>
     </div>
-
-  </div>
-
- );
+  );
 }
 
 export default Profile;
